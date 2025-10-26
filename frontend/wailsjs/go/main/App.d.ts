@@ -3,3 +3,5 @@
 import {config} from '../models';
 
 export function GetConfig():Promise<config.Config>;
+
+export function SetProviderSettings(arg1:string,arg2:config.Provider):Promise<void>;

@@ -2,10 +2,14 @@ package providers
 
 import (
 	"encoding/json"
+	"math/rand"
+	"regexp"
+
 	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 	"tip-aggregator/internal/config"
 	"tip-aggregator/internal/events"
@@ -17,9 +21,9 @@ type Chaturbate struct {
 	stopChan chan struct{}
 }
 
-func NewChaturbate(cfg config.Provider) Chaturbate {
-	return Chaturbate{
-		config:  &cfg,
+func NewChaturbate(cfg *config.Provider) *Chaturbate {
+	return &Chaturbate{
+		config:  cfg,
 		nextUrl: "",
 	}
 }
@@ -30,12 +34,21 @@ func (c Chaturbate) GetName() string {
 
 func (c Chaturbate) Start(handler events.EventHandler) error {
 	if !c.config.Enabled || c.config.ApiToken == "" {
+		fmt.Println("Provider Chaturbate not enabled or API Token missing")
 		return errors.New("Provider Chaturbate not enabled or API Token missing")
 	}
+	pattern := `^https:\/\/eventsapi\.chaturbate\.com\/events\/[a-zA-Z0-9]+\/[a-zA-Z0-9]+\/$`
+	match, err := regexp.MatchString(pattern, c.config.ApiToken)
+	if !match || err != nil {
+		fmt.Println("Chaturbate API Token Format wrong.")
+		return errors.New("Chaturbate API Token Format wrong.")
+	}
+
 	c.stopChan = make(chan struct{})
 	for {
 		select {
 		case <-c.stopChan:
+			fmt.Println("CB Stopped")
 			return nil
 		default:
 			handler(c.GetName(), c.fetch())
@@ -44,6 +57,7 @@ func (c Chaturbate) Start(handler events.EventHandler) error {
 }
 
 func (c Chaturbate) Stop() {
+	c.nextUrl = ""
 	if c.stopChan != nil {
 		close(c.stopChan)
 	}
@@ -54,16 +68,19 @@ func (c Chaturbate) fetch() events.Event {
 	if c.nextUrl != "" {
 		fetchUrl = c.nextUrl
 	} else {
-		fetchUrl = c.config.ApiToken
+		fetchUrl = strings.TrimSpace(c.config.ApiToken)
 	}
 	resp, err := http.Get(fetchUrl + "?timeout=" + strconv.Itoa(c.config.FetchInterval))
 	if err != nil {
 		fmt.Println("Error getting chaturbate data", err)
+		return nil
 	}
 	var cbResponse cbResponse
 	if err := json.NewDecoder(resp.Body).Decode(&cbResponse); err != nil {
 		fmt.Println("Error decoding chaturbate data", err)
+		return nil
 	}
+	// cbResponse := c._fakeFetch() // INFO comment code above, uncomment this, to test with a faked cb response
 
 	c.nextUrl = cbResponse.NextUrl
 
@@ -73,6 +90,7 @@ func (c Chaturbate) fetch() events.Event {
 			if err := json.Unmarshal(event.Object, &obj); err != nil {
 				return nil
 			}
+
 			return events.TipEvent{
 				Id: event.Id,
 				User: events.User{
@@ -109,10 +127,45 @@ func (c Chaturbate) fetch() events.Event {
 			return events.FollowEvent{Id: event.Id, User: user, Timestamp: time.Now()}
 		case "unfollow":
 			return events.UnfollowEvent{Id: event.Id, User: user, Timestamp: time.Now()}
+		default:
+			return nil
 		}
 	}
 
 	return nil
+}
+
+func (c Chaturbate) _fakeFetch() cbResponse {
+	time.Sleep(10 * time.Second)
+	tip := cbEventTip{
+		Broadcaster: "tadakonyanko",
+		Tip: struct {
+			Tokens  int    `json:"tokens"`
+			IsAnon  bool   `json:"isAnon"`
+			Message string `json:"message"`
+		}{
+			Tokens:  500,
+			IsAnon:  false,
+			Message: "Heya! Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.",
+		},
+		User: cbUser{
+			Gender:     "m",
+			IsMod:      false,
+			Username:   "nyoob",
+			InFanclub:  false,
+			HasTokens:  true,
+			RecentTips: "many",
+		},
+	}
+
+	tipBytes, _ := json.Marshal(tip)
+
+	return cbResponse{
+		Events: []cbEvents{
+			{Method: "tip", Id: fmt.Sprint(rand.Int63()), Object: tipBytes},
+		},
+		NextUrl: "",
+	}
 }
 
 type cbResponse struct {

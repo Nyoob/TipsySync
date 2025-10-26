@@ -5,13 +5,14 @@ import MuiAppBar from '@mui/material/AppBar';
 import List from '@mui/material/List';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
-// import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-// import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-// import InboxIcon from '@mui/icons-material/MoveToInbox';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const drawerWidth = 240;
 
@@ -105,23 +106,27 @@ export default function TADrawer() {
     setOpen(false);
   };
 
+  const handleDrawerToggle = () => {
+    setOpen(o => !o)
+  }
+
   const links = [
-    { title: "Overview", hashlink: "#", icon: "a" },
-    { title: "Settings", hashlink: "#settings", icon: "a" },
+    { title: "Events", hashlink: "#", icon: <AttachMoneyIcon /> },
+    { title: "Settings", hashlink: "#settings", icon: <SettingsIcon /> },
   ]
 
   return (
     <Drawer variant="permanent" open={open}>
       <DrawerHeader>
-        <IconButton onClick={handleDrawerClose}>
-          {/* {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />} */}
+        <IconButton onClick={handleDrawerToggle}>
+          {open ? <ChevronLeftIcon fontSize="large"/> : <ChevronRightIcon fontSize="large"/>}
         </IconButton>
       </DrawerHeader>
       <Divider />
       <List>
         {links.map((link, index) => (
           <ListItem key={link.title} disablePadding sx={{ display: 'block' }}>
-            <a href={link.hashlink}>
+            <a href={link.hashlink} style={{ color: "#fff", textDecoration: "none" }}>
               <ListItemButton
                 sx={[{ minHeight: 48, px: 2.5, }, open ? { justifyContent: 'initial', } : { justifyContent: 'center', },]}>
                 <ListItemIcon

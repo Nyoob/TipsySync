@@ -5,3 +5,7 @@
 export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
 }
+
+export function SetProviderSettings(arg1, arg2) {
+  return window['go']['main']['App']['SetProviderSettings'](arg1, arg2);
+}

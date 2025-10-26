@@ -6,7 +6,9 @@ import (
 )
 
 type Config struct {
-  Providers map[string]Provider
+  Providers map[string]*Provider
+  db *database.DB
+  updateCallback func()
 }
 
 type Provider struct {
@@ -15,45 +17,47 @@ type Provider struct {
   FetchInterval int // in seconds
 }
 
-func NewConfig(db *database.DB, updateCb func(Config)) *Config {
+func NewConfig(db *database.DB, updateCallback func()) *Config {
   defaultConfig := getDefaultConfig()
 
-  // here do the SQL stuff, idea is:
-  // * loop through defaultConfig providers, saving them to db if not exists (for first time load)
-  // * have a method "setProviderSettings" to set a provider setting in db
+  defaultConfig.db = db
+  defaultConfig.updateCallback = updateCallback
 
   for providerName, providerSettings := range defaultConfig.Providers {
     // setup providers in DB if not exist
-		db.Exec(`INSERT OR IGNORE INTO settings_providers (id, enabled, apiToken, fetchInterval) VALUES (?, ?, ?, ?)`, 
+    _, err := db.Exec(`INSERT OR IGNORE INTO settings_providers (id, enabled, apiToken, fetchInterval) VALUES (?, ?, ?, ?)`, 
       providerName, providerSettings.Enabled, providerSettings.ApiToken, providerSettings.FetchInterval);
+    if err != nil { fmt.Println("Error setting default provider settings: ", err)}
 
     // get from DB and set to local cfg
-    newPSettings := defaultConfig.GetProviderSettings(db, providerName)
+    newPSettings := defaultConfig.GetProviderSettings(providerName)
     if newPSettings != nil {
-      defaultConfig.Providers[providerName] = *newPSettings
+      defaultConfig.Providers[providerName] = newPSettings
     }
   }
 
   return defaultConfig
 }
 
-func (c Config) SetProviderSettings(db *database.DB, provider string, settings Provider) {
+func (c Config) SetProviderSettings(provider string, settings *Provider) {
   c.Providers[provider] = settings
+  c.updateCallback()
 
-  if db != nil {
-    db.Exec(`UPDATE settings_providers
+  if c.db != nil {
+    _, err := c.db.Exec(`UPDATE settings_providers
       SET enabled = ?, apiToken = ?, fetchInterval = ?
       WHERE id = ?`, settings.Enabled, settings.ApiToken, settings.FetchInterval, provider)
+    if err != nil { fmt.Println("Error setting provider settings: ", err)}
   }
 }
 
 // gets setting from DB
-func (c Config) GetProviderSettings(db *database.DB, provider string) *Provider {
-	row := db.QueryRow(`SELECT enabled, apiToken, fetchInterval FROM settings_providers WHERE id = ?`, provider);
+func (c Config) GetProviderSettings(provider string) *Provider {
+	row := c.db.QueryRow(`SELECT enabled, apiToken, fetchInterval FROM settings_providers WHERE id = ?`, provider);
 	var cfg Provider;
-	err := row.Scan(&cfg.ApiToken, &cfg.FetchInterval)
+	err := row.Scan(&cfg.Enabled, &cfg.ApiToken, &cfg.FetchInterval)
 	if err != nil {
-		fmt.Println("Error getting provider from DB:", err)
+    fmt.Println("Error getting provider from DB:: ", err)
 		return nil
 	}
 	return &cfg
@@ -61,7 +65,7 @@ func (c Config) GetProviderSettings(db *database.DB, provider string) *Provider 
 
 func getDefaultConfig() *Config {
   return &Config{
-    Providers: map[string]Provider{
+    Providers: map[string]*Provider{
       "chaturbate": {
         Enabled: false,
         ApiToken: "", // db field

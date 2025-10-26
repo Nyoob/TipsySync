@@ -2,6 +2,8 @@ package events
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -9,13 +11,30 @@ import (
 
 type EventHandler func(providerName string, event Event) error
 
-func NewHandler() EventHandler {
+func NewHandler(ctx context.Context) EventHandler {
 	return func(providerName string, event Event) error {
-		// todo: send to JS
-		runtime.EventsEmit(context.Background(), event.EventType(), event)
-		// todo: send to websocket handler
+		// TODO: add an error param that emits an error event to display errors to the user
+		if event == nil {
+			return errors.New("Eventhandler saw empty event")
+		}
+		wrappedEvent := WrappedEvent{
+			Provider: providerName,
+			Type:     event.EventType(),
+			Event:    event,
+		}
+		fmt.Println("handling event!!!")
+		// send to JS
+		runtime.EventsEmit(ctx, "platform_event", wrappedEvent)
+		// TODO: send to websocket handler
+
 		return nil
 	}
+}
+
+type WrappedEvent struct {
+	Provider string
+	Type     string
+	Event    Event
 }
 
 // event types

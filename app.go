@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"tip-aggregator/internal/config"
 	"tip-aggregator/internal/database"
 	"tip-aggregator/internal/events"
 	"tip-aggregator/internal/providers"
 )
 
-// App struct
 type App struct {
 	ctx context.Context
 	db *database.DB
@@ -16,7 +16,6 @@ type App struct {
 	providers []providers.Provider
 }
 
-// NewApp creates a new App application struct
 func NewApp() *App {
 	return &App{}
 }
@@ -33,15 +32,26 @@ func (a *App) startup(ctx context.Context) {
 	a.startHandling()
 }
 
-func (a *App) onConfigUpdate(cfg config.Config) {
+// shudown to clean up, eg. database close
+func (a *App) shutdown(ctx context.Context) {
+	a.db.Close()
 	for _, provider := range a.providers {
-		go provider.Stop()
+		provider.Stop()
+	}
+	fmt.Println("TA Cleanup finished!")
+}
+
+// this restarts providers when the config is updated, just to make sure everything works for sure
+// for example, this resets chaturbate's nextUrl.
+func (a *App) onConfigUpdate() {
+	for _, provider := range a.providers {
+		provider.Stop()
 	}
 	a.startHandling()
 }
 
 func (a *App) startHandling() {
-	eventHandler := events.NewHandler()
+	eventHandler := events.NewHandler(a.ctx)
 	for _, provider := range a.providers {
 		go provider.Start(eventHandler)
 	}
@@ -50,4 +60,8 @@ func (a *App) startHandling() {
 // Public Methods (frontend)
 func (a *App) GetConfig() config.Config {
 	return *a.config;
+}
+
+func (a *App) SetProviderSettings(provider string, config config.Provider) {
+	a.config.SetProviderSettings(provider, &config)
 }
