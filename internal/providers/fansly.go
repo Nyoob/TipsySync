@@ -60,10 +60,10 @@ func (f *Fansly) Start(handler events.EventHandler) error {
 		fmt.Println("Error connecting to Fansly Websocket")
 	}
 
-  chatRoomId := f.getChatRoomId(f.config.ApiToken)
-  if chatRoomId == "" {
-    return errors.New("ChatroomID is undefined. Username is likely wrong.")
-  }
+	chatRoomId := f.getChatRoomId(f.config.ApiToken)
+	if chatRoomId == "" {
+		return errors.New("ChatroomID is undefined. Username is likely wrong.")
+	}
 
 	// init chatroom id
 	initializer := `{"t":46001,"d":"{\"chatRoomId\":\"` + chatRoomId + `\",\"v\":3}"}`
@@ -105,11 +105,16 @@ func (f *Fansly) Start(handler events.EventHandler) error {
 	}
 }
 
-func (f *Fansly) Stop() {
-	fmt.Println("Stopping Fansly")
-	f.socket.Close()
-	close(f.stopCh)
-	return
+func (f *Fansly) Stop() { // TODO: fix goofy ahh nil pointer deref
+	select {
+	case <-f.stopCh:
+		fmt.Println("Stopping Fansly -> Already stopped")
+		return
+	default:
+		fmt.Println("Stopping Fansly")
+		f.socket.Close()
+		close(f.stopCh)
+	}
 }
 
 func (f *Fansly) onMessage(rawMessage []byte) events.Event {
@@ -162,7 +167,7 @@ func (f *Fansly) onMessage(rawMessage []byte) events.Event {
 		timestamp := time.Unix(jsts/1000, jsts%1000*int64(time.Millisecond))
 
 		// tip
-    hasTip, tip := f.attachmentHasTip(event.ChatRoomMessage.Attachments);
+		hasTip, tip := f.attachmentHasTip(event.ChatRoomMessage.Attachments)
 		if hasTip {
 			return events.TipEvent{
 				Id:                event.ChatRoomMessage.ID,
@@ -174,10 +179,10 @@ func (f *Fansly) onMessage(rawMessage []byte) events.Event {
 			}
 		} else { // regular chat msg, no tip
 			return events.ChatMessageEvent{
-				Id:        event.ChatRoomMessage.ID,
-        ChatMessage: event.ChatRoomMessage.Content,
-				User:      evtUser,
-				Timestamp: timestamp,
+				Id:          event.ChatRoomMessage.ID,
+				ChatMessage: event.ChatRoomMessage.Content,
+				User:        evtUser,
+				Timestamp:   timestamp,
 			}
 		}
 	}
@@ -238,31 +243,31 @@ func (f *Fansly) parseMsg(msg *fanslyResponseMessage) {
 }
 
 func (f *Fansly) getChatRoomId(username string) string {
-  resp, err := http.Get("https://apiv3.fansly.com/api/v1/account?usernames=" + username + "&ngsw-bypass=true")
-  if err != nil {
-    fmt.Println("Error getting Fansly ChatroomID (fetch) ", err)
-    return ""
-  }
-  defer resp.Body.Close()
+	resp, err := http.Get("https://apiv3.fansly.com/api/v1/account?usernames=" + username + "&ngsw-bypass=true")
+	if err != nil {
+		fmt.Println("Error getting Fansly ChatroomID (fetch) ", err)
+		return ""
+	}
+	defer resp.Body.Close()
 
-  body, err := io.ReadAll(resp.Body)
-  if err != nil {
-    return ""
-  }
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ""
+	}
 
-  var data fanslyAccountResponse
-  err = json.Unmarshal(body, &data)
-  if err != nil {
-    fmt.Println("Error parsing Fansly Account Response", err)
-    return ""
-  }
+	var data fanslyAccountResponse
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		fmt.Println("Error parsing Fansly Account Response", err)
+		return ""
+	}
 
-  if len(data.Response) == 0 {
+	if len(data.Response) == 0 {
 		fmt.Println("Response Data is empty", data, " (For username: ", username, ")")
-    return ""
-  }
+		return ""
+	}
 
-  return data.Response[0].Streaming.Channel.ChatRoomId
+	return data.Response[0].Streaming.Channel.ChatRoomId
 }
 
 func (f *Fansly) attachmentHasTip(attachments []fanslyResponseAttachment) (bool, float64) {
@@ -275,13 +280,13 @@ func (f *Fansly) attachmentHasTip(attachments []fanslyResponseAttachment) (bool,
 }
 
 type fanslyAccountResponse struct {
-  Response []struct {
-    Streaming struct {
-      Channel struct {
-        ChatRoomId string `json:"chatRoomId"`
-      } `json:"channel"`
-    } `json:"streaming"`
-  } `json:"response"`
+	Response []struct {
+		Streaming struct {
+			Channel struct {
+				ChatRoomId string `json:"chatRoomId"`
+			} `json:"channel"`
+		} `json:"streaming"`
+	} `json:"response"`
 }
 
 type fanslyResponseMessage struct {

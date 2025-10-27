@@ -46,6 +46,7 @@ func (a *App) shutdown(ctx context.Context) {
 // it also handles enable/disable, since only .Start() checks for enabled bool
 func (a *App) onConfigUpdate() {
 	for _, provider := range a.providers {
+		fmt.Println("CONFIGUPDATE STOP:", provider.GetName())
 		provider.Stop()
 	}
 	a.startHandling()
@@ -54,6 +55,7 @@ func (a *App) onConfigUpdate() {
 func (a *App) startHandling() {
 	eventHandler := events.NewHandler(a.ctx)
 	for _, provider := range a.providers {
+		fmt.Println("STARTHANDLING:", provider.GetName())
 		go provider.Start(eventHandler)
 	}
 }

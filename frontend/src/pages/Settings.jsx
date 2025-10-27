@@ -29,10 +29,16 @@ function Settings() {
 function ProviderSettings({ provider, data, key }) {
     const [settings, setSettings] = useState(data);
     const [debouncedSettings] = useDebounce(settings, 500);
+    const [initialized, setInitialized] = useState(false) // to not call SetProviderSettings early
 
     useEffect(() => {
+        if(!initialized) return;
         SetProviderSettings(provider, debouncedSettings);
     }, [debouncedSettings])
+
+    useEffect(() => {
+        setInitialized(true);
+    })
 
     return <Accordion key={key}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>

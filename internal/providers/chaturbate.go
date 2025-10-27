@@ -60,10 +60,15 @@ func (c *Chaturbate) Start(handler events.EventHandler) error {
 }
 
 func (c *Chaturbate) Stop() {
-	fmt.Println("Stopping Chaturbate")
-	c.nextUrl = ""
-	close(c.stopCh)
-	return
+	select {
+	case <-c.stopCh:
+		fmt.Println("Stopping Chaturbate -> Already stopped")
+		return
+	default:
+		fmt.Println("Stopping Chaturbate")
+		c.nextUrl = ""
+		close(c.stopCh)
+	}
 }
 
 func (c *Chaturbate) fetch() events.Event {
