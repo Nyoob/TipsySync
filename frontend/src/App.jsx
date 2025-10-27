@@ -19,6 +19,7 @@ function App() {
 
     useEffect(() => {
         EventsOn('platform_event', (data) => {
+            console.log(data);
             setEvents(e => {
                 var newE = [data, ...e];
                 if (newE.length > 100) {
@@ -26,6 +27,9 @@ function App() {
                 }
                 return newE;
             });
+        })
+        EventsOn('platform_chatMessage', (data) => {
+            console.log("CHATMESSAGE:", data);
         })
     }, [])
 

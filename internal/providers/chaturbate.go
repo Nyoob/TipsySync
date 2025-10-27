@@ -85,6 +85,7 @@ func (c Chaturbate) fetch() events.Event {
 	c.nextUrl = cbResponse.NextUrl
 
 	for _, event := range cbResponse.Events {
+		// tip logic
 		if event.Method == "tip" {
 			var obj cbEventTip
 			if err := json.Unmarshal(event.Object, &obj); err != nil {
@@ -92,41 +93,44 @@ func (c Chaturbate) fetch() events.Event {
 			}
 
 			return events.TipEvent{
-				Id: event.Id,
-				User: events.User{
-					Username:   obj.User.Username,
-					Gender:     obj.User.Gender,
-					IsMod:      obj.User.IsMod,
-					HasTks:     obj.User.HasTokens,
-					Subscribed: obj.User.InFanclub,
-				},
-				TipValue:          obj.Tip.Tokens,
+				Id:                "cb_" + event.Id,
+				User:              c.buildUser(obj.User),
+				TipValue:          float64(obj.Tip.Tokens),
 				TipValueInDollars: float64(obj.Tip.Tokens) * 0.05,
 				TipMessage:        obj.Tip.Message,
 				Timestamp:         time.Now(),
 			}
 		}
+		// chat message logic
+		if event.Method == "chatMessage" {
+			var obj cbEventChatMessage
+			if err := json.Unmarshal(event.Object, &obj); err != nil {
+				return nil
+			}
 
+			return events.ChatMessageEvent{
+				Id:          "cb_" + event.Id,
+				User:        c.buildUser(obj.User),
+				ChatMessage: obj.Message.Message,
+				Timestamp:   time.Now(),
+			}
+		}
+
+		// generic (no additional data, just follow, unfollow, subscribe)
 		var obj cbEventGeneric
 		if err := json.Unmarshal(event.Object, &obj); err != nil {
 			return nil
 		}
 
-		user := events.User{
-			Username:   obj.User.Username,
-			Gender:     obj.User.Gender,
-			IsMod:      obj.User.IsMod,
-			HasTks:     obj.User.HasTokens,
-			Subscribed: obj.User.InFanclub,
-		}
+		user := c.buildUser(obj.User)
 
 		switch event.Method {
 		case "fanclubJoin":
-			return events.SubscribeEvent{Id: event.Id, User: user, Timestamp: time.Now()}
+			return events.SubscribeEvent{Id: "cb_" + event.Id, TierId: "fanclub",TierName: "Fanclub", User: user, Timestamp: time.Now()}
 		case "follow":
-			return events.FollowEvent{Id: event.Id, User: user, Timestamp: time.Now()}
+			return events.FollowEvent{Id: "cb_" + event.Id, User: user, Timestamp: time.Now()}
 		case "unfollow":
-			return events.UnfollowEvent{Id: event.Id, User: user, Timestamp: time.Now()}
+			return events.UnfollowEvent{Id: "cb" + event.Id, User: user, Timestamp: time.Now()}
 		default:
 			return nil
 		}
@@ -135,6 +139,25 @@ func (c Chaturbate) fetch() events.Event {
 	return nil
 }
 
+func (c Chaturbate) buildUser(user cbUser) events.User {
+	tierName := ""
+	tierColor := ""
+	if user.InFanclub {
+		tierName = "Fanclub"
+		tierColor = "#009900"
+	}
+	return events.User{
+		Username:   user.Username,
+		Gender:     user.Gender,
+		IsMod:      user.IsMod,
+		HasTks:     user.HasTokens,
+		Subscribed: user.InFanclub,
+		SubscribedTierName: tierName,
+		SubscribedTierColor: tierColor,
+	}
+}
+
+// used for testing without an api token
 func (c Chaturbate) _fakeFetch() cbResponse {
 	time.Sleep(10 * time.Second)
 	tip := cbEventTip{
@@ -177,6 +200,7 @@ type cbEvents struct {
 	Id     string          `json:"id"`
 	Object json.RawMessage `json:"object"`
 }
+
 type cbEvent interface{}
 
 type cbEventTip struct {
@@ -188,9 +212,21 @@ type cbEventTip struct {
 	} `json:"tip"`
 	User cbUser `json:"user"`
 }
+type cbEventChatMessage struct {
+	Message     cbMessage `json:"message"`
+	Broadcaster string    `json:"broadcaster"`
+	User        cbUser    `json:"user"`
+}
 type cbEventGeneric struct {
 	Broadcaster string `json:"broadcaster"`
 	User        cbUser `json:"user"`
+}
+
+type cbMessage struct {
+	Color   string `json:"color"`
+	BgColor string `json:"bgColor"`
+	Message string `json:"message"`
+	Font    string `json:"font"`
 }
 
 type cbUser struct {

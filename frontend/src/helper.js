@@ -1,4 +1,5 @@
 import chaturbate from './assets/images/logo_chaturbate.png';
+import fansly from './assets/images/logo_fansly.png';
 
 export const eventTypes = [
   'tip', 'follow', 'unfollow', 'subscribe'
@@ -6,10 +7,12 @@ export const eventTypes = [
 
 export const imageLookup = {
   chaturbate,
+  fansly,
 }
 
 export const currencyName = {
   chaturbate: "tks",
+  fansly: "$",
 }
 
 export const genderLookup = {
@@ -17,14 +20,22 @@ export const genderLookup = {
   "f": "Female",
   "t": "Trans",
   "c": "Couple",
+  "u": "Unknown",
 }
 
-export const subscriptionName = {
-  chaturbate: {
-    name: "fanclub",
-    shortText: "joined fanclub",
-    longText: "has joined your fanclub",
-  },
+export const subscriptionName = (tier) => {
+  return {
+    chaturbate: {
+      name: "fanclub",
+      shortText: "joined fanclub",
+      longText: "has joined your fanclub",
+    },
+    fansly: {
+      name: tier,
+      shortText: "subscribed to " + tier,
+      longText: `has subscribed to Tier "${tier}"`,
+    },
+  }
 }
 
 export function getEventItemText(event) {
@@ -46,9 +57,10 @@ export function getEventItemText(event) {
         longText: `User ${event.Event.User.Username} has unfollowed you`,
       }
     case "subscribe":
+      const subTexts = subscriptionName(event.Event.User.Tier)[event.Provider];
       return {
-        shortText: "subscribed",
-        longText: `User ${event.Event.User.Username} has ${subscriptionName[event.Provider].sentence}`,
+        shortText: subTexts.shortText,
+        longText: `User ${event.Event.User.Username} has ${subTexts.longText}`,
       }
   }
 }

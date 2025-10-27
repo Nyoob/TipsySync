@@ -43,6 +43,7 @@ func (a *App) shutdown(ctx context.Context) {
 
 // this restarts providers when the config is updated, just to make sure everything works for sure
 // for example, this resets chaturbate's nextUrl.
+// it also handles enable/disable, since only .Start() checks for enabled bool
 func (a *App) onConfigUpdate() {
 	for _, provider := range a.providers {
 		provider.Stop()

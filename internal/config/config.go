@@ -68,8 +68,13 @@ func getDefaultConfig() *Config {
     Providers: map[string]*Provider{
       "chaturbate": {
         Enabled: false,
-        ApiToken: "", // db field
-        FetchInterval: 10, // db field
+        ApiToken: "",
+        FetchInterval: 10,
+      },
+      "fansly": {
+        Enabled: false,
+        ApiToken: "",
+        FetchInterval: 0,
       },
     },
   }

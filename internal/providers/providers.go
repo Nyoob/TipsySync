@@ -14,6 +14,7 @@ type Provider interface {
 func InitializeProviders(cfg *config.Config) []Provider {
   return []Provider {
 	  NewChaturbate(cfg.Providers["chaturbate"]),
+	  NewFansly(cfg.Providers["fansly"]),
   }
 }
 

@@ -6,8 +6,8 @@ It also collects statistics, and offers a websocket connection to let other loca
 I'm trying to add as many features as possible for all platforms, but some (eg. Fansly) do not offer api's and rely on webscraping.
 Platforms supported or planned:
 - Chaturbate
+- Fansly
 - Stripchat (planned)
-- Fansly (planned)
 - Onlyfans (planned)
 - Youtube (planned)
 - Twitch (planned)
@@ -22,7 +22,14 @@ Current implemented or planned features:
 # Setting up
 (TODO) Go to the [Releases Page](https://github.com/Nyoob/tip-aggregator/releases) and download the latest release.
 
-## Building it yourself
+#### Chaturbate
+Go to the [Chaturbate Token Authorization Page](https://chaturbate.com/statsapi/authtoken/) and create an Events API Token
+Paste the full Token URL into the Chaturbate Settings.
+
+#### Fansly
+Put in your Fansly Username into the Settings, without the leading @.
+
+# Building it yourself
 Clone the repo, run `go mod download`, head into /frontend, run `yarn install`.
 Then run `wails build`. Check out the [Wails Documentation](https://wails.io/docs/reference/cli#build) for more info.
 

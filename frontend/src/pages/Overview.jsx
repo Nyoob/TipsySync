@@ -14,7 +14,7 @@ function Overview({ events }) {
     setHighlightedEventIds(p => [...p, newEventId]);
     setTimeout(() => {
       setHighlightedEventIds(prev => prev.filter(id => id !== newEventId));
-    }, 5000);
+    }, 10000);
   }, [events])
 
   return (
@@ -45,7 +45,7 @@ function EventDetails({ event, closeDetails }) {
       <CloseIcon />
     </IconButton>
 
-    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+    <Typography variant="h4" sx={{ fontWeight: 'bold', color: event.Event.User.SubscribedTierColor != "" ? event.Event.User.SubscribedTierColor : "unset" }}>
       {event.Event.User.Username}
     </Typography>
     <Typography variant="subtitle1" color="text.secondary" sx={{ marginTop: 0.5 }}>

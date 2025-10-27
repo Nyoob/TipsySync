@@ -36,21 +36,26 @@ function ProviderSettings({ provider, data, key }) {
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>
             <Typography component="span">{capitalizeFirstLetter(provider)}</Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2}}>
+        <AccordionDetails sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <FormControlLabel label="Enabled?"
                 control={<Checkbox checked={settings.Enabled} onChange={(e) => setSettings((s) => ({ ...s, Enabled: e.target.checked }))} />} />
             <TextField variant="standard" label={apiTokenLabels[provider]} value={settings.ApiToken}
                 onChange={(e) => setSettings((s) => ({ ...s, ApiToken: e.target.value }))} />
-            <TextField variant="standard" label="Fetch Interval"
+            {shouldShowFetchInterval[provider] && <TextField variant="standard" label="Fetch Interval"
                 slots={{ type: 'number' }} slotsProps={{ input: { min: 1, max: 120, step: 1 } }}
                 value={settings.FetchInterval}
-                onChange={(e) => setSettings((s) => ({ ...s, FetchInterval: parseInt(e.target.value) }))} />
+                onChange={(e) => setSettings((s) => ({ ...s, FetchInterval: parseInt(e.target.value) }))} />}
         </AccordionDetails>
     </Accordion>
 }
 
 const apiTokenLabels = {
-    chaturbate: "Events API Token URL"
+    chaturbate: "Events API Token URL",
+    fansly: "Room ID"
+}
+const shouldShowFetchInterval = {
+    chaturbate: true,
+    fansly: false
 }
 
 export default Settings

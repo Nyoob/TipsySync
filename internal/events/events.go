@@ -22,9 +22,16 @@ func NewHandler(ctx context.Context) EventHandler {
 			Type:     event.EventType(),
 			Event:    event,
 		}
-		fmt.Println("handling event!!!")
+		fmt.Println("Handler: WrappedEvent", wrappedEvent);
+
 		// send to JS
-		runtime.EventsEmit(ctx, "platform_event", wrappedEvent)
+		switch event.EventType() {
+		case "tip", "follow", "unfollow", "subscribe":
+			runtime.EventsEmit(ctx, "platform_event", wrappedEvent)
+		case "chatMessage":
+			runtime.EventsEmit(ctx, "platform_chatMessage", wrappedEvent)
+		}
+
 		// TODO: send to websocket handler
 
 		return nil
@@ -45,7 +52,7 @@ type Event interface {
 type TipEvent struct {
 	Id                string
 	User              User
-	TipValue          int
+	TipValue          float64
 	TipValueInDollars float64
 	TipMessage        string
 	Timestamp         time.Time
@@ -71,16 +78,30 @@ func (f UnfollowEvent) EventType() string { return "unfollow" }
 
 type SubscribeEvent struct { // eg. cb fanclub
 	Id        string
+	TierId    string
+	TierName  string
+	Streak    int
 	User      User
 	Timestamp time.Time
 }
 
-func (s SubscribeEvent) EventType() string { return "subscribe" }
+func (f SubscribeEvent) EventType() string { return "subscribe" }
+
+type ChatMessageEvent struct {
+	Id          string
+	ChatMessage string
+	User        User
+	Timestamp   time.Time
+}
+
+func (f ChatMessageEvent) EventType() string { return "chatMessage" }
 
 type User struct {
-	Username   string
-	Subscribed bool
-	Gender     string // m(ale), f(emale), t(rans), c(ouple)
-	HasTks     bool
-	IsMod      bool
+	Username            string
+	Subscribed          bool
+	SubscribedTierName  string
+	SubscribedTierColor string
+	Gender              string // m(ale), f(emale), t(rans), c(ouple)
+	HasTks              bool
+	IsMod               bool
 }
