@@ -26,6 +26,7 @@ const (
 type Fansly struct {
 	config *config.Provider
 	socket *websocket.Conn
+	stopCh chan struct{}
 }
 
 func NewFansly(cfg *config.Provider) *Fansly {
@@ -35,11 +36,14 @@ func NewFansly(cfg *config.Provider) *Fansly {
 	}
 }
 
-func (f Fansly) GetName() string {
+func (f *Fansly) GetName() string {
 	return "fansly"
 }
 
-func (f Fansly) Start(handler events.EventHandler) error {
+func (f *Fansly) Start(handler events.EventHandler) error {
+	fmt.Println("Starting Fansly")
+	f.stopCh = make(chan struct{})
+
 	if !f.config.Enabled || f.config.ApiToken == "" {
 		fmt.Println("Provider Fansly not enabled or ChatroomID missing")
 		return errors.New("Provider Fansly not enabled or ChatroomID missing")
@@ -57,7 +61,6 @@ func (f Fansly) Start(handler events.EventHandler) error {
 	}
 
   chatRoomId := f.getChatRoomId(f.config.ApiToken)
-  fmt.Println(chatRoomId)
   if chatRoomId == "" {
     return errors.New("ChatroomID is undefined. Username is likely wrong.")
   }
@@ -71,33 +74,45 @@ func (f Fansly) Start(handler events.EventHandler) error {
 	defer ticker.Stop()
 
 	go func() {
-		for range ticker.C {
-			err := f.socket.WriteMessage(websocket.TextMessage, []byte("p"))
-			if err != nil {
-				fmt.Println("Error sending fansly keepalive")
+		select {
+		case <-f.stopCh:
+			fmt.Println("Fansly Stopped successfully")
+			return
+		default:
+			for range ticker.C {
+				err := f.socket.WriteMessage(websocket.TextMessage, []byte("p"))
+				if err != nil {
+					fmt.Println("Error sending fansly keepalive")
+				}
 			}
 		}
 	}()
 
 	// start handling
 	for {
-		_, message, err := f.socket.ReadMessage()
-		if err != nil {
-			fmt.Println("Fansly Socket ReadMessage Error, likely called Stop()", err)
+		select {
+		case <-f.stopCh:
+			fmt.Println("Stopped Fansly")
 			return nil
+		default:
+			_, message, err := f.socket.ReadMessage()
+			if err != nil {
+				fmt.Println("Fansly Socket ReadMessage Error, likely called Stop()", err)
+				return nil
+			}
+			handler(f.GetName(), f.onMessage(message))
 		}
-
-		handler(f.GetName(), f.onMessage(message))
 	}
 }
 
-func (f Fansly) Stop() {
-	if f.socket != nil {
-		f.socket.Close()
-	}
+func (f *Fansly) Stop() {
+	fmt.Println("Stopping Fansly")
+	f.socket.Close()
+	close(f.stopCh)
+	return
 }
 
-func (f Fansly) onMessage(rawMessage []byte) events.Event {
+func (f *Fansly) onMessage(rawMessage []byte) events.Event {
 	var msg fanslyResponseMessage
 	err := json.Unmarshal(rawMessage, &msg)
 	if err != nil {
@@ -193,7 +208,7 @@ func (f Fansly) onMessage(rawMessage []byte) events.Event {
 	return nil
 }
 
-func (f Fansly) parseMsg(msg *fanslyResponseMessage) {
+func (f *Fansly) parseMsg(msg *fanslyResponseMessage) {
 	err := json.Unmarshal([]byte(msg.RawInnerMessage), &msg.InnerMessage)
 	if err != nil {
 		fmt.Println("Fansly: Error unmarshalling inner message ", err)
@@ -222,7 +237,7 @@ func (f Fansly) parseMsg(msg *fanslyResponseMessage) {
 	}
 }
 
-func (f Fansly) getChatRoomId(username string) string {
+func (f *Fansly) getChatRoomId(username string) string {
   resp, err := http.Get("https://apiv3.fansly.com/api/v1/account?usernames=" + username + "&ngsw-bypass=true")
   if err != nil {
     fmt.Println("Error getting Fansly ChatroomID (fetch) ", err)
@@ -243,14 +258,14 @@ func (f Fansly) getChatRoomId(username string) string {
   }
 
   if len(data.Response) == 0 {
-    fmt.Println("Response Data is empty", data)
+		fmt.Println("Response Data is empty", data, " (For username: ", username, ")")
     return ""
   }
 
   return data.Response[0].Streaming.Channel.ChatRoomId
 }
 
-func (f Fansly) attachmentHasTip(attachments []fanslyResponseAttachment) (bool, float64) {
+func (f *Fansly) attachmentHasTip(attachments []fanslyResponseAttachment) (bool, float64) {
 	for _, attachment := range attachments {
 		if attachment.ContentType == 7 {
 			return true, attachment.Metadata["amount"].(float64)

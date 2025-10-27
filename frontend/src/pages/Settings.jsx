@@ -3,6 +3,7 @@ import { GetConfig, SetProviderSettings } from "../../wailsjs/go/main/App";
 import { Accordion, AccordionSummary, AccordionDetails, Typography, FormGroup, Checkbox, FormControlLabel, TextField } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { capitalizeFirstLetter } from '../helper';
+import { useDebounce } from 'use-debounce';
 
 function Settings() {
     const [cfg, setCfg] = useState({});
@@ -27,10 +28,11 @@ function Settings() {
 
 function ProviderSettings({ provider, data, key }) {
     const [settings, setSettings] = useState(data);
+    const [debouncedSettings] = useDebounce(settings, 500);
 
     useEffect(() => {
-        SetProviderSettings(provider, settings);
-    }, [settings])
+        SetProviderSettings(provider, debouncedSettings);
+    }, [debouncedSettings])
 
     return <Accordion key={key}>
         <AccordionSummary expandIcon={<ExpandMoreIcon />}>

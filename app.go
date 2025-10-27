@@ -60,9 +60,11 @@ func (a *App) startHandling() {
 
 // Public Methods (frontend)
 func (a *App) GetConfig() config.Config {
+	fmt.Println("Getconfig called")
 	return *a.config;
 }
 
 func (a *App) SetProviderSettings(provider string, config config.Provider) {
+	fmt.Println("SetProviderSettings called")
 	a.config.SetProviderSettings(provider, &config)
 }

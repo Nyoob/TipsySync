@@ -18,7 +18,7 @@ import (
 type Chaturbate struct {
 	config   *config.Provider
 	nextUrl  string
-	stopChan chan struct{}
+	stopCh chan struct{}
 }
 
 func NewChaturbate(cfg *config.Provider) *Chaturbate {
@@ -28,15 +28,19 @@ func NewChaturbate(cfg *config.Provider) *Chaturbate {
 	}
 }
 
-func (c Chaturbate) GetName() string {
+func (c *Chaturbate) GetName() string {
 	return "chaturbate"
 }
 
-func (c Chaturbate) Start(handler events.EventHandler) error {
+func (c *Chaturbate) Start(handler events.EventHandler) error {
+	fmt.Println("Starting Chaturbate")
+	c.stopCh = make(chan struct{})
+
 	if !c.config.Enabled || c.config.ApiToken == "" {
 		fmt.Println("Provider Chaturbate not enabled or API Token missing")
 		return errors.New("Provider Chaturbate not enabled or API Token missing")
 	}
+
 	pattern := `^https:\/\/eventsapi\.chaturbate\.com\/events\/[a-zA-Z0-9]+\/[a-zA-Z0-9]+\/$`
 	match, err := regexp.MatchString(pattern, c.config.ApiToken)
 	if !match || err != nil {
@@ -44,11 +48,10 @@ func (c Chaturbate) Start(handler events.EventHandler) error {
 		return errors.New("Chaturbate API Token Format wrong.")
 	}
 
-	c.stopChan = make(chan struct{})
 	for {
 		select {
-		case <-c.stopChan:
-			fmt.Println("CB Stopped")
+		case <-c.stopCh:
+			fmt.Println("Chaturbate Stopped successfully")
 			return nil
 		default:
 			handler(c.GetName(), c.fetch())
@@ -56,14 +59,14 @@ func (c Chaturbate) Start(handler events.EventHandler) error {
 	}
 }
 
-func (c Chaturbate) Stop() {
+func (c *Chaturbate) Stop() {
+	fmt.Println("Stopping Chaturbate")
 	c.nextUrl = ""
-	if c.stopChan != nil {
-		close(c.stopChan)
-	}
+	close(c.stopCh)
+	return
 }
 
-func (c Chaturbate) fetch() events.Event {
+func (c *Chaturbate) fetch() events.Event {
 	var fetchUrl string
 	if c.nextUrl != "" {
 		fetchUrl = c.nextUrl
@@ -139,7 +142,7 @@ func (c Chaturbate) fetch() events.Event {
 	return nil
 }
 
-func (c Chaturbate) buildUser(user cbUser) events.User {
+func (c *Chaturbate) buildUser(user cbUser) events.User {
 	tierName := ""
 	tierColor := ""
 	if user.InFanclub {
@@ -158,7 +161,7 @@ func (c Chaturbate) buildUser(user cbUser) events.User {
 }
 
 // used for testing without an api token
-func (c Chaturbate) _fakeFetch() cbResponse {
+func (c *Chaturbate) _fakeFetch() cbResponse {
 	time.Sleep(10 * time.Second)
 	tip := cbEventTip{
 		Broadcaster: "tadakonyanko",
