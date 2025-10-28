@@ -23,7 +23,7 @@ export const genderLookup = {
   "u": "Unknown",
 }
 
-export const subscriptionName = (tier) => {
+export const getSubscriptionName = (tier) => {
   return {
     chaturbate: {
       name: "fanclub",
@@ -57,7 +57,7 @@ export function getEventItemText(event) {
         longText: `User ${event.Event.User.Username} has unfollowed you`,
       }
     case "subscribe":
-      const subTexts = subscriptionName(event.Event.User.Tier)[event.Provider];
+      const subTexts = getSubscriptionName(event.Event.User.Tier)[event.Provider];
       return {
         shortText: subTexts.shortText,
         longText: `User ${event.Event.User.Username} has ${subTexts.longText}`,

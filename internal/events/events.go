@@ -76,7 +76,7 @@ type UnfollowEvent struct {
 
 func (f UnfollowEvent) EventType() string { return "unfollow" }
 
-type SubscribeEvent struct { // eg. cb fanclub
+type SubscribeEvent struct { // eg. cb fanclub or fansly sub
 	Id        string
 	TierId    string
 	TierName  string

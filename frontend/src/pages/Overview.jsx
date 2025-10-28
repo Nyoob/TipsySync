@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Box, Grow, IconButton, Paper, Stack, Typography } from '@mui/material';
 
-import { capitalizeFirstLetter, currencyName, eventTypes, genderLookup, getEventItemText, imageLookup, subscriptionName } from '../helper';
+import { capitalizeFirstLetter, currencyName, eventTypes, genderLookup, getEventItemText, getSubscriptionName, imageLookup } from '../helper';
 import CloseIcon from '@mui/icons-material/Close';
 
 function Overview({ events }) {
@@ -35,6 +35,7 @@ function Overview({ events }) {
 function EventDetails({ event, closeDetails }) {
   console.log(event)
   const texts = getEventItemText(event);
+  const subNames = getSubscriptionName(event.Provider);
   return <Paper elevation={2} sx={{ padding: 4, flexBasis: 100, minWidth: 300, position: 'relative' }}>
     <IconButton
       size="large"
@@ -59,12 +60,20 @@ function EventDetails({ event, closeDetails }) {
       <Typography variant="body1"><b>Dollar Value:</b> {event.Event.TipValueInDollars}</Typography>
     </Box>}
 
+    {event.Type == "subscribe" && <Box sx={{ marginTop: 4 }}>
+      <Typography variant="h6">New Subscription</Typography>
+      <Typography variant="body1"><b>Subscription Tier ID:</b> {event.Event.TierId}</Typography>
+      <Typography variant="body1"><b>Subscription Tier:</b> {event.Event.TierName}</Typography>
+      <Typography variant="body1"><b>Subscription Streak:</b> {event.Event.User.Streak}</Typography>
+    </Box>}
+
     <Box sx={{ marginTop: 4 }}>
       <Typography variant="h6">User</Typography>
       <Typography variant="body1"><b>Username:</b> {event.Event.User.Username}</Typography>
       <Typography variant="body1"><b>Gender:</b> {genderLookup[event.Event.User.Gender]}</Typography>
       <Typography variant="body1"><b>Has Tokens:</b> {event.Event.User.HasTks}</Typography>
-      <Typography variant="body1"><b>{capitalizeFirstLetter(subscriptionName[event.Provider].name)}:</b> {event.Event.User.Subscribed}</Typography>
+      <Typography variant="body1"><b>Subscribed:</b> {event.Event.User.Subscribed}</Typography>
+      <Typography variant="body1"><b>Subscription Tier:</b> {event.Event.User.SubscribedTiername}</Typography>
     </Box>
 
     <Box sx={{ marginTop: 4 }}>
