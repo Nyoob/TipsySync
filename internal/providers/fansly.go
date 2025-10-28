@@ -43,7 +43,6 @@ func (f *Fansly) GetName() string {
 func (f *Fansly) Start(handler events.EventHandler) error {
 	fmt.Println("Starting Fansly")
 	f.stopCh = make(chan struct{})
-
 	if !f.config.Enabled || f.config.ApiToken == "" {
 		fmt.Println("Provider Fansly not enabled or ChatroomID missing")
 		return errors.New("Provider Fansly not enabled or ChatroomID missing")
@@ -112,7 +111,9 @@ func (f *Fansly) Stop() { // TODO: fix goofy ahh nil pointer deref
 		return
 	default:
 		fmt.Println("Stopping Fansly")
-		f.socket.Close()
+		if f.socket != nil {
+			f.socket.Close()
+		}
 		close(f.stopCh)
 	}
 }

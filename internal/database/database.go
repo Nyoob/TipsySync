@@ -15,9 +15,11 @@ type DB struct {
 
 // New creates a new database instance
 func NewDatabase() *DB {
-	cfgDir, _ := os.UserConfigDir()
-	dbDir := cfgDir + "/TipAggregator"
-	dbPath := dbDir + "/aggregator.db"
+	// cfgDir, _ := os.UserConfigDir()
+	// dbDir := cfgDir + "/TipAggregator"
+	// dbPath := dbDir + "/aggregator.db"
+	dbDir := "./data"
+	dbPath := "./data/db.db"
 	os.MkdirAll(dbDir, 0755)
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
