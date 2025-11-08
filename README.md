@@ -3,12 +3,12 @@ This Application combines Tips/Donations, Follows & Subscriptions of most popula
 It also collects statistics, and offers a websocket connection to let other local applications use the data (eg. UE, Unity, Warudo, Lovense)
 
 ## Features
-Current implemented or planned features:
+Currently implemented features:
 - Event list (latest follows, subs, tips)
 
 ## Planned Features
-- More Providers (see Supported Platforms below)
 - Websocket sending events as they come in
+- More Providers (see Supported Platforms below)
 - Infobuttons (on every page, display an Iconbutton at the top right, which expands a menu from the top explaining details of the current page)
 - Overview (customizable widgets, resizable, drag+drop - basically components of pages in smaller version)
 - Chatlog page (combines all chatlogs from all sources)
@@ -16,11 +16,17 @@ Current implemented or planned features:
 - Stream Overlays (since we already got relevant tip/sub data, why not create some overlays for OBS aswell?)
 
 ### Technical todo:
+- stripchat:
+    - connecting to WS done.✅
+    - parse WS data & emit own event
+    - find a way to get streamers userID by username (lets search requests for id ig)
+    - add userinfo like "isKing", "isKnight", level/rank, "isUltimate", "isRegular"
 - implement logger:
-    - improve logs in dev console
+    - improve logs in dev console, by passing category aswell like logger.Log(ctx, prefix, msg)
     - log to file
     - add toast with events, when logger.Toast in golang, display toast in UI
     - add log-page in UI
+    - make logger.Error return an errors.New()
 
 ## Supported platforms
 I'm trying to add as many features as possible for all platforms, but some (eg. Fansly) do not offer api's and rely on webscraping or hijacking chat websockets.
@@ -29,7 +35,7 @@ Platforms ✅ supported or 🛠️ planned:
 | Implemented | Provider   | Tips | Un-/Follow | Subscriptions | Chat |
 |-------------|------------|------|------------|---------------|------|
 | ✅           | Chaturbate | ✅    | ✅          | ✅             | ✅    |
-| 🛠️           | Stripchat  |       |             |                |       |
+| 🛠️           | Stripchat  | ✅WIP    |             |                |       |
 | ✅           | Fansly     | ✅    | ❌          | ✅             | ✅    |
 | ❌           | Onlyfans   |       |             |                |       |
 | ❌           | YouTube    |       |             |                |       |

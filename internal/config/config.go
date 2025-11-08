@@ -76,6 +76,11 @@ func getDefaultConfig() *Config {
         ApiToken: "",
         FetchInterval: 0,
       },
+      "stripchat": {
+        Enabled: false,
+        ApiToken: "",
+        FetchInterval: 0,
+      },
     },
   }
 }
