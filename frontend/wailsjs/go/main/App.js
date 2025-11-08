@@ -9,3 +9,7 @@ export function GetConfig() {
 export function SetProviderSettings(arg1, arg2) {
   return window['go']['main']['App']['SetProviderSettings'](arg1, arg2);
 }
+
+export function SetSettings(arg1) {
+  return window['go']['main']['App']['SetSettings'](arg1);
+}

@@ -17,6 +17,7 @@ export namespace config {
 	    }
 	}
 	export class Config {
+	    Settings: Record<string, string>;
 	    Providers: Record<string, Provider>;
 	
 	    static createFrom(source: any = {}) {
@@ -25,6 +26,7 @@ export namespace config {
 	
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.Settings = source["Settings"];
 	        this.Providers = this.convertValues(source["Providers"], Provider, true);
 	    }
 	

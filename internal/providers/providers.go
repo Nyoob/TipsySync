@@ -13,8 +13,8 @@ type Provider interface {
 
 func InitializeProviders(cfg *config.Config) []Provider {
   return []Provider {
-	  // NewChaturbate(cfg.Providers["chaturbate"]),
-	  // NewFansly(cfg.Providers["fansly"]),
+	  NewChaturbate(cfg.Providers["chaturbate"]),
+	  NewFansly(cfg.Providers["fansly"]),
 	  NewStripchat(cfg.Providers["stripchat"]),
   }
 }

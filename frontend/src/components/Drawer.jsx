@@ -111,7 +111,7 @@ export default function TADrawer() {
   }
 
   const links = [
-    { title: "Events", hashlink: "#", icon: <AttachMoneyIcon /> },
+    { title: "Events", hashlink: "#events", icon: <AttachMoneyIcon /> },
     { title: "Settings", hashlink: "#settings", icon: <SettingsIcon /> },
   ]
 

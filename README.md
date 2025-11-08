@@ -5,9 +5,9 @@ It also collects statistics, and offers a websocket connection to let other loca
 ## Features
 Currently implemented features:
 - Event list (latest follows, subs, tips)
+- Websocket sending events as they come in
 
 ## Planned Features
-- Websocket sending events as they come in
 - More Providers (see Supported Platforms below)
 - Infobuttons (on every page, display an Iconbutton at the top right, which expands a menu from the top explaining details of the current page)
 - Overview (customizable widgets, resizable, drag+drop - basically components of pages in smaller version)
@@ -16,11 +16,6 @@ Currently implemented features:
 - Stream Overlays (since we already got relevant tip/sub data, why not create some overlays for OBS aswell?)
 
 ### Technical todo:
-- stripchat:
-    - connecting to WS done.✅
-    - parse WS data & emit own event
-    - find a way to get streamers userID by username (lets search requests for id ig)
-    - add userinfo like "isKing", "isKnight", level/rank, "isUltimate", "isRegular"
 - implement logger:
     - improve logs in dev console, by passing category aswell like logger.Log(ctx, prefix, msg)
     - log to file
@@ -35,7 +30,7 @@ Platforms ✅ supported or 🛠️ planned:
 | Implemented | Provider   | Tips | Un-/Follow | Subscriptions | Chat |
 |-------------|------------|------|------------|---------------|------|
 | ✅           | Chaturbate | ✅    | ✅          | ✅             | ✅    |
-| 🛠️           | Stripchat  | ✅WIP    |             |                |       |
+| 🛠️           | Stripchat  | ✅    |             |                | ✅    |
 | ✅           | Fansly     | ✅    | ❌          | ✅             | ✅    |
 | ❌           | Onlyfans   |       |             |                |       |
 | ❌           | YouTube    |       |             |                |       |

@@ -1,5 +1,6 @@
 import chaturbate from './assets/images/logo_chaturbate.png';
 import fansly from './assets/images/logo_fansly.png';
+import stripchat from './assets/images/logo_stripchat.png';
 
 export const eventTypes = [
   'tip', 'follow', 'unfollow', 'subscribe'
@@ -8,11 +9,13 @@ export const eventTypes = [
 export const imageLookup = {
   chaturbate,
   fansly,
+  stripchat,
 }
 
 export const currencyName = {
   chaturbate: "tks",
   fansly: "$",
+  stripchat: "tks",
 }
 
 export const genderLookup = {
@@ -34,6 +37,11 @@ export const getSubscriptionName = (tier) => {
       name: tier,
       shortText: "subscribed to " + tier,
       longText: `has subscribed to Tier "${tier}"`,
+    },
+    fansly: {
+      name: tier,
+      shortText: "join fanclub tier " + tier,
+      longText: `has joined your Fanclub, Tier "${tier}"`,
     },
   }
 }

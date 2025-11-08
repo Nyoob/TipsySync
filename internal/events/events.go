@@ -2,16 +2,19 @@ package events
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
-	"fmt"
+	"log/slog"
 	"time"
+	"tip-aggregator/internal/logger"
+	"tip-aggregator/internal/socket"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 type EventHandler func(providerName string, event Event) error
 
-func NewHandler(ctx context.Context) EventHandler {
+func NewHandler(ctx context.Context, socket *socket.Socket) EventHandler {
 	return func(providerName string, event Event) error {
 		// TODO: add an error param that emits an error event to display errors to the user
 		if event == nil {
@@ -22,7 +25,7 @@ func NewHandler(ctx context.Context) EventHandler {
 			Type:     event.EventType(),
 			Event:    event,
 		}
-		fmt.Println("Handler: WrappedEvent", wrappedEvent);
+		logger.Debug(context.Background(), "EventHandler", "WrappedEvent to send", slog.Any("WrappedEvent", wrappedEvent))
 
 		// send to JS
 		switch event.EventType() {
@@ -32,7 +35,11 @@ func NewHandler(ctx context.Context) EventHandler {
 			runtime.EventsEmit(ctx, "platform_chatMessage", wrappedEvent)
 		}
 
-		// TODO: send to websocket handler
+		jsonBytes, err := json.Marshal(wrappedEvent)
+		if err != nil {
+			logger.Error(context.Background(), "EventHandler", "Error marshalling WrappedEvent")
+		}
+		socket.SendMsg(jsonBytes)
 
 		return nil
 	}
@@ -104,4 +111,7 @@ type User struct {
 	Gender              string // m(ale), f(emale), t(rans), c(ouple)
 	HasTks              bool
 	IsMod               bool
+	StripchatIsKing			bool
+	StripchatIsKnight		bool
+	StripchatIsUltimate bool
 }
