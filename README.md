@@ -5,7 +5,7 @@ It also collects statistics (soon), and offers a websocket connection to let oth
 ## Features
 Currently implemented features:
 - Event list (latest follows, subs, tips)
-- Websocket sending events as they come in
+- [Websocket](/docs/websocket.md) sending events as they come in
 
 ## Planned Features
 - More Providers (see Supported Platforms below)
@@ -14,6 +14,7 @@ Currently implemented features:
 - Overview (customizable widgets, resizable, drag+drop - basically components of pages in smaller version)
 - Lovense & PiShock integration (maybe other toys aswell?)
 - Statistics page (gets income by platform/date/day etc)
+- Autoupdate (fynelabs selfupdate lib maybe?)
 - Stream Overlays (since we already got relevant tip/sub data, why not create some overlays for OBS aswell?)
 
 ### Technical todo:
@@ -47,17 +48,9 @@ Platforms ✅ supported or 🛠️ planned:
 * Platforms to consider in the future are CamSoda, BongaCams, LiveJasmin, ManyVids. Might start working on them if there's interest.
 
 # Setting up
-(TODO) Go to the [Releases Page](https://github.com/Nyoob/TipsySync/releases) and download the latest release.
+Go to the [Releases Page](https://github.com/Nyoob/TipsySync/releases) and download the latest release.
 
-#### Chaturbate
-Go to the [Chaturbate Token Authorization Page](https://chaturbate.com/statsapi/authtoken/) and create an Events API Token
-Paste the full Token URL into the Chaturbate Settings.
-
-#### Fansly
-Put in your Fansly Username into the Settings, without the leading @.
-
-#### Stripchat
-Put in your Stripchat Username into the Settings, without the leading @.
+To setup the individual platforms, check out the [Platform Setup Docs](/docs/setup_platforms.md)
 
 # Building it yourself
 Clone the repo, run `go mod download`, head into /frontend, run `yarn install`.

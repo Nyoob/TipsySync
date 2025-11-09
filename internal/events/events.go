@@ -84,12 +84,14 @@ type UnfollowEvent struct {
 func (f UnfollowEvent) EventType() string { return "unfollow" }
 
 type SubscribeEvent struct { // eg. cb fanclub or fansly sub
-	Id        string
-	TierId    string
-	TierName  string
-	Streak    int
-	User      User
-	Timestamp time.Time
+	Id         string
+	TierId     string
+	TierName   string
+	Streak     int
+	User       User
+	IsGift     bool // later for twitch
+	GiftAmount int // later for twitch
+	Timestamp  time.Time
 }
 
 func (f SubscribeEvent) EventType() string { return "subscribe" }
@@ -111,7 +113,7 @@ type User struct {
 	Gender              string // m(ale), f(emale), t(rans), c(ouple)
 	HasTks              bool
 	IsMod               bool
-	StripchatIsKing			bool
-	StripchatIsKnight		bool
+	StripchatIsKing     bool
+	StripchatIsKnight   bool
 	StripchatIsUltimate bool
 }
