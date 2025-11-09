@@ -11,7 +11,7 @@ type Config struct {
   Settings map[string]string
   Providers map[string]*Provider
   db *database.DB
-  updateCallback func()
+  updateCallback func(string)
 }
 
 type Provider struct {
@@ -20,7 +20,7 @@ type Provider struct {
   FetchInterval int // in seconds
 }
 
-func NewConfig(db *database.DB, updateCallback func()) *Config {
+func NewConfig(db *database.DB, updateCallback func(string)) *Config {
   defaultConfig := getDefaultConfig()
 
   defaultConfig.db = db
@@ -61,7 +61,7 @@ func (c *Config) SetSetting(key string, value any) {
     logger.Error(context.Background(), "Config", "Couldn't set Setting, can't parse to string")
   }
   c.Settings[key] = valueString
-  c.updateCallback()
+  c.updateCallback("")
 
   if c.db != nil {
     _, err :=  c.db.Exec(`UPDATE settings
@@ -83,8 +83,8 @@ func (c *Config) GetSetting(setting string) string {
 }
 
 func (c *Config) SetProviderSettings(provider string, settings *Provider) {
-  c.Providers[provider] = settings
-  c.updateCallback()
+  *c.Providers[provider] = *settings 
+  c.updateCallback(provider)
 
   if c.db != nil {
     _, err := c.db.Exec(`UPDATE settings_providers

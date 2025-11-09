@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 
@@ -11,6 +12,7 @@ import (
 	"time"
 	"tip-aggregator/internal/config"
 	"tip-aggregator/internal/events"
+	"tip-aggregator/internal/logger"
 
 	"github.com/gorilla/websocket"
 )
@@ -26,7 +28,9 @@ const (
 type Fansly struct {
 	config *config.Provider
 	socket *websocket.Conn
-	stopCh chan struct{}
+	ctx    context.Context
+	cancel context.CancelFunc
+	done chan struct{}
 }
 
 func NewFansly(cfg *config.Provider) *Fansly {
@@ -41,11 +45,17 @@ func (f *Fansly) GetName() string {
 }
 
 func (f *Fansly) Start(handler events.EventHandler) error {
-	fmt.Println("Starting Fansly")
-	f.stopCh = make(chan struct{})
-	if !f.config.Enabled || f.config.ApiToken == "" {
-		fmt.Println("Provider Fansly not enabled or ChatroomID missing")
-		return errors.New("Provider Fansly not enabled or ChatroomID missing")
+	if !f.config.Enabled {
+		return nil
+	}
+
+	logger.Info(context.Background(), "FANSLY", "🆕 Starting Service...")
+	f.done = make(chan struct{})
+	defer close(f.done)
+	f.ctx, f.cancel = context.WithCancel(context.Background())
+
+	if f.config.ApiToken == "" {
+		return logger.Error(context.Background(), "FANSLY", "❌ ChatroomID not set")
 	}
 
 	// f._fake() // INFO: uncomment to fake WS data TODO implement this shit
@@ -74,8 +84,7 @@ func (f *Fansly) Start(handler events.EventHandler) error {
 
 	go func() {
 		select {
-		case <-f.stopCh:
-			fmt.Println("Fansly Stopped successfully")
+		case <-f.ctx.Done():
 			return
 		default:
 			for range ticker.C {
@@ -90,8 +99,8 @@ func (f *Fansly) Start(handler events.EventHandler) error {
 	// start handling
 	for {
 		select {
-		case <-f.stopCh:
-			fmt.Println("Stopped Fansly")
+		case <-f.ctx.Done():
+			logger.Info(context.Background(), "FANSLY", "💯 Stopped successfully")
 			return nil
 		default:
 			_, message, err := f.socket.ReadMessage()
@@ -104,17 +113,14 @@ func (f *Fansly) Start(handler events.EventHandler) error {
 	}
 }
 
-func (f *Fansly) Stop() { // TODO: fix goofy ahh nil pointer deref
-	select {
-	case <-f.stopCh:
-		fmt.Println("Stopping Fansly -> Already stopped")
-		return
-	default:
-		fmt.Println("Stopping Fansly")
-		if f.socket != nil {
-			f.socket.Close()
-		}
-		close(f.stopCh)
+func (f *Fansly) Stop() {
+	logger.Info(context.Background(), "FANSLY", "🛑 Stopping Service...")
+	if f.socket != nil {
+		f.socket.Close()
+	}
+	if f.cancel != nil {
+		f.cancel()
+		<-f.done
 	}
 }
 
@@ -171,7 +177,7 @@ func (f *Fansly) onMessage(rawMessage []byte) events.Event {
 		hasTip, tip := f.attachmentHasTip(event.ChatRoomMessage.Attachments)
 		if hasTip {
 			return events.TipEvent{
-				Id:                event.ChatRoomMessage.ID,
+				Id:                "fansly_" + event.ChatRoomMessage.ID,
 				User:              evtUser,
 				TipValue:          tip / 1000,
 				TipValueInDollars: tip / 1000,
@@ -180,7 +186,7 @@ func (f *Fansly) onMessage(rawMessage []byte) events.Event {
 			}
 		} else { // regular chat msg, no tip
 			return events.ChatMessageEvent{
-				Id:          event.ChatRoomMessage.ID,
+				Id:          "fansly_" + event.ChatRoomMessage.ID,
 				ChatMessage: event.ChatRoomMessage.Content,
 				User:        evtUser,
 				Timestamp:   timestamp,
@@ -195,7 +201,7 @@ func (f *Fansly) onMessage(rawMessage []byte) events.Event {
 		}
 
 		return events.SubscribeEvent{
-			Id:       event.SubAlert.ID,
+			Id:       "fansly_" + event.SubAlert.ID,
 			TierId:   event.SubAlert.SubscriptionTierID,
 			TierName: event.SubAlert.SubscriptionTierName,
 			User: events.User{

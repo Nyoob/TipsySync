@@ -22,7 +22,9 @@ import (
 type Stripchat struct {
 	config *config.Provider
 	socket *websocket.Conn
-	stopCh chan struct{}
+	ctx    context.Context
+	cancel context.CancelFunc
+	done   chan struct{}
 }
 
 const (
@@ -41,10 +43,17 @@ func (f *Stripchat) GetName() string {
 }
 
 func (f *Stripchat) Start(handler events.EventHandler) error {
-	logger.Info(context.Background(), "STRIPCHAT", "Starting handler")
-	f.stopCh = make(chan struct{})
-	if !f.config.Enabled || f.config.ApiToken == "" { // TODO uncomment this once frontend done
-		return logger.Error(context.Background(), "STRIPCHAT", "Provider not enabled or ApiToken missing")
+	if !f.config.Enabled {
+		return nil
+	}
+
+	logger.Info(context.Background(), "STRIPCHAT", "🆕 Starting Service...")
+	f.done = make(chan struct{})
+	defer close(f.done)
+	f.ctx, f.cancel = context.WithCancel(context.Background())
+
+	if f.config.ApiToken == "" {
+		return logger.Error(context.Background(), "STRIPCHAT", "❌ ChatroomID not set")
 	}
 
 	// f._fake() // INFO: uncomment to fake WS data TODO implement this shit
@@ -96,8 +105,8 @@ func (f *Stripchat) Start(handler events.EventHandler) error {
 	// start handling
 	for {
 		select {
-		case <-f.stopCh:
-			fmt.Println("Stopped stripchat")
+		case <-f.ctx.Done():
+			logger.Info(context.Background(), "STRIPCHAT", "💯 Stopped successfully")
 			return nil
 		default:
 			_, message, err := f.socket.ReadMessage()
@@ -114,17 +123,14 @@ func (f *Stripchat) Start(handler events.EventHandler) error {
 	}
 }
 
-func (f *Stripchat) Stop() { // TODO: fix goofy ahh nil pointer deref
-	select {
-	case <-f.stopCh:
-		fmt.Println("Stopping Stripchat -> Already stopped")
-		return
-	default:
-		fmt.Println("Stopping Stripchat")
-		if f.socket != nil {
-			f.socket.Close()
-		}
-		close(f.stopCh)
+func (f *Stripchat) Stop() {
+	logger.Info(context.Background(), "FANSLY", "🛑 Stopping Service...")
+	if f.socket != nil {
+		f.socket.Close()
+	}
+	if f.cancel != nil {
+		f.cancel()
+		<-f.done
 	}
 }
 
@@ -164,10 +170,10 @@ func (f *Stripchat) onMessage(rawMessage []byte) events.Event {
 
 	if innerMsg.Type == "text" {
 		return events.ChatMessageEvent{
-			Id:   "sc_" + strconv.FormatInt(innerMsg.ID, 10),
-			User: evtUser,
+			Id:          "sc_" + strconv.FormatInt(innerMsg.ID, 10),
+			User:        evtUser,
 			ChatMessage: innerMsg.Details.Body,
-			Timestamp: time.Now(),
+			Timestamp:   time.Now(),
 		}
 	}
 

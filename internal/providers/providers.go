@@ -11,11 +11,11 @@ type Provider interface {
   GetName() string
 }
 
-func InitializeProviders(cfg *config.Config) []Provider {
-  return []Provider {
-	  NewChaturbate(cfg.Providers["chaturbate"]),
-	  NewFansly(cfg.Providers["fansly"]),
-	  NewStripchat(cfg.Providers["stripchat"]),
+func InitializeProviders(cfg *config.Config) map[string]Provider {
+  return map[string]Provider {
+    "chaturbate": NewChaturbate(cfg.Providers["chaturbate"]),
+    "fansly": NewFansly(cfg.Providers["fansly"]),
+    "stripchat": NewStripchat(cfg.Providers["stripchat"]),
   }
 }
 

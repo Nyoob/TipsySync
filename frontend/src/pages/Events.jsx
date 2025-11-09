@@ -34,7 +34,6 @@ function Events({ events }) {
 }
 
 function EventDetails({ event, closeDetails }) {
-  console.log(event)
   const texts = getEventItemText(event);
   const subNames = getSubscriptionName(event.Provider);
   return <Paper elevation={2} sx={{ padding: 4, flexBasis: 100, minWidth: 300, position: 'relative' }}>
@@ -43,6 +42,7 @@ function EventDetails({ event, closeDetails }) {
       color="inherit"
       aria-label="menu"
       sx={{ position: 'absolute', right: 8, top: 8 }}
+      onClick={closeDetails}
     >
       <CloseIcon />
     </IconButton>

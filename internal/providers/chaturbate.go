@@ -1,11 +1,11 @@
 package providers
 
 import (
+	"context"
 	"encoding/json"
 	"math/rand"
 	"regexp"
 
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -13,12 +13,15 @@ import (
 	"time"
 	"tip-aggregator/internal/config"
 	"tip-aggregator/internal/events"
+	"tip-aggregator/internal/logger"
 )
 
 type Chaturbate struct {
-	config   *config.Provider
-	nextUrl  string
-	stopCh chan struct{}
+	config  *config.Provider
+	nextUrl string
+	ctx context.Context
+	cancel  context.CancelFunc
+	done chan struct{}
 }
 
 func NewChaturbate(cfg *config.Provider) *Chaturbate {
@@ -33,25 +36,30 @@ func (c *Chaturbate) GetName() string {
 }
 
 func (c *Chaturbate) Start(handler events.EventHandler) error {
-	fmt.Println("Starting Chaturbate")
-	c.stopCh = make(chan struct{})
+	if !c.config.Enabled {
+		return nil
+	}
 
-	if !c.config.Enabled || c.config.ApiToken == "" {
-		fmt.Println("Provider Chaturbate not enabled or API Token missing")
-		return errors.New("Provider Chaturbate not enabled or API Token missing")
+	logger.Info(context.Background(), "CHATURBATE", "🆕 Starting Service...")
+	c.done = make(chan struct{})
+	defer close(c.done)
+	c.ctx, c.cancel = context.WithCancel(context.Background())
+
+	if c.config.ApiToken == "" {
+		return logger.Error(context.Background(), "CHATURBATE", "❌ API Token Missing")
 	}
 
 	pattern := `^https:\/\/eventsapi\.chaturbate\.com\/events\/[a-zA-Z0-9]+\/[a-zA-Z0-9]+\/$`
 	match, err := regexp.MatchString(pattern, c.config.ApiToken)
 	if !match || err != nil {
 		fmt.Println("Chaturbate API Token Format wrong.")
-		return errors.New("Chaturbate API Token Format wrong.")
+		return logger.Error(context.Background(), "CHATURBATE", "❌ API Token Format wrong!")
 	}
 
 	for {
 		select {
-		case <-c.stopCh:
-			fmt.Println("Chaturbate Stopped successfully")
+		case <-c.ctx.Done():
+			logger.Info(context.Background(), "CHATURBATE", "💯 Stopped successfully")
 			return nil
 		default:
 			handler(c.GetName(), c.fetch())
@@ -60,14 +68,10 @@ func (c *Chaturbate) Start(handler events.EventHandler) error {
 }
 
 func (c *Chaturbate) Stop() {
-	select {
-	case <-c.stopCh:
-		fmt.Println("Stopping Chaturbate -> Already stopped")
-		return
-	default:
-		fmt.Println("Stopping Chaturbate")
-		c.nextUrl = ""
-		close(c.stopCh)
+	logger.Info(context.Background(), "CHATURBATE", "🛑 Stopping Service...")
+	if c.cancel != nil {
+		c.cancel()
+		<-c.done
 	}
 }
 
@@ -134,7 +138,7 @@ func (c *Chaturbate) fetch() events.Event {
 
 		switch event.Method {
 		case "fanclubJoin":
-			return events.SubscribeEvent{Id: "cb_" + event.Id, TierId: "fanclub",TierName: "Fanclub", User: user, Timestamp: time.Now()}
+			return events.SubscribeEvent{Id: "cb_" + event.Id, TierId: "fanclub", TierName: "Fanclub", User: user, Timestamp: time.Now()}
 		case "follow":
 			return events.FollowEvent{Id: "cb_" + event.Id, User: user, Timestamp: time.Now()}
 		case "unfollow":
@@ -155,12 +159,12 @@ func (c *Chaturbate) buildUser(user cbUser) events.User {
 		tierColor = "#009900"
 	}
 	return events.User{
-		Username:   user.Username,
-		Gender:     user.Gender,
-		IsMod:      user.IsMod,
-		HasTks:     user.HasTokens,
-		Subscribed: user.InFanclub,
-		SubscribedTierName: tierName,
+		Username:            user.Username,
+		Gender:              user.Gender,
+		IsMod:               user.IsMod,
+		HasTks:              user.HasTokens,
+		Subscribed:          user.InFanclub,
+		SubscribedTierName:  tierName,
 		SubscribedTierColor: tierColor,
 	}
 }

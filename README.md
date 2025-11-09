@@ -12,9 +12,9 @@ Currently implemented features:
 - Infobuttons (on every page, display an Iconbutton at the top right, which expands a menu from the top explaining details of the current page)
 - Chatlog page (combines all chatlogs from all sources)
 - Overview (customizable widgets, resizable, drag+drop - basically components of pages in smaller version)
+- Lovense & PiShock integration (maybe other toys aswell?)
 - Statistics page (gets income by platform/date/day etc)
 - Stream Overlays (since we already got relevant tip/sub data, why not create some overlays for OBS aswell?)
-- Lovense integration (maybe other toys aswell? eg. PiShock)
 
 ### Technical todo:
 - improve logger:
@@ -47,7 +47,7 @@ Platforms ✅ supported or 🛠️ planned:
 * Platforms to consider in the future are CamSoda, BongaCams, LiveJasmin, ManyVids. Might start working on them if there's interest.
 
 # Setting up
-(TODO) Go to the [Releases Page](https://github.com/Nyoob/tip-aggregator/releases) and download the latest release.
+(TODO) Go to the [Releases Page](https://github.com/Nyoob/TipsySync/releases) and download the latest release.
 
 #### Chaturbate
 Go to the [Chaturbate Token Authorization Page](https://chaturbate.com/statsapi/authtoken/) and create an Events API Token

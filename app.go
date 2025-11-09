@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"tip-aggregator/internal/config"
 	"tip-aggregator/internal/database"
@@ -15,11 +14,12 @@ import (
 )
 
 type App struct {
-	ctx       context.Context
-	db        *database.DB
-	socket 		*socket.Socket
-	config    *config.Config
-	providers []providers.Provider
+	ctx          context.Context
+	db           *database.DB
+	socket       *socket.Socket
+	config       *config.Config
+	providers    map[string]providers.Provider
+	eventHandler events.EventHandler
 }
 
 func NewApp() *App {
@@ -37,6 +37,8 @@ func (a *App) startup(ctx context.Context) {
 
 	a.socket = socket.NewSocket(":" + a.config.Settings["socketPort"])
 
+	a.eventHandler = events.NewHandler(a.ctx, a.socket)
+
 	a.startHandling()
 }
 
@@ -49,26 +51,26 @@ func (a *App) shutdown(ctx context.Context) {
 	logger.Info(context.Background(), "APP", "Cleanup finished.")
 }
 
-// this restarts providers when the config is updated, just to make sure everything works for sure
+// this restarts a specific provider & also sends an event to frontend with most recent config
 // for example, this resets chaturbate's nextUrl.
 // it also handles enable/disable, since only .Start() checks for enabled bool
-func (a *App) onConfigUpdate() {
-	logger.Info(context.Background(), "APP", "Config updated, restarting all providers")
+func (a *App) onConfigUpdate(provider string) {
+	logger.Info(context.Background(), "APP", "Config updated")
 	// send new cfg to frontend app
 	runtime.EventsEmit(a.ctx, "config_update", a.config)
 
-	// restart providers
-	for _, provider := range a.providers {
-		fmt.Println("CONFIGUPDATE STOP:", provider.GetName())
-		provider.Stop()
+	// restart provider if required
+	if provider != "" {
+		go func() {
+			a.providers[provider].Stop()
+			a.providers[provider].Start(a.eventHandler)
+		}()
 	}
-	a.startHandling()
 }
 
 func (a *App) startHandling() {
-	eventHandler := events.NewHandler(a.ctx, a.socket)
 	for _, provider := range a.providers {
-		go provider.Start(eventHandler)
+		go provider.Start(a.eventHandler)
 	}
 }
 
@@ -86,4 +88,3 @@ func (a *App) SetSettings(settings map[string]any) {
 func (a *App) SetProviderSettings(provider string, config config.Provider) {
 	a.config.SetProviderSettings(provider, &config)
 }
-
