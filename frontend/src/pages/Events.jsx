@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Box, Grow, IconButton, Paper, Stack, Typography } from '@mui/material';
 
-import { capitalizeFirstLetter, currencyName, eventTypes, genderLookup, getEventItemText, getSubscriptionName, imageLookup } from '../helper';
+import { capitalizeFirstLetter, eventTypes, genderLookup, getEventItemText, getSubscriptionName, imageLookup } from '../helper';
 import CloseIcon from '@mui/icons-material/Close';
+import { useSelector } from 'react-redux';
 
-function Events({ events }) {
+function Events({ isWidget }) {
+  const events = useSelector(s => s.events);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [highlightedEventIds, setHighlightedEventIds] = useState([]);
 
@@ -57,7 +59,7 @@ function EventDetails({ event, closeDetails }) {
     {event.Type == "tip" && <Box sx={{ marginTop: 4 }}>
       <Typography variant="h6">Tip</Typography>
       <Typography variant="body1"><b>Message:</b> {event.Event.TipMessage}</Typography>
-      <Typography variant="body1"><b>Tipped:</b> {event.Event.TipValue + currencyName?.[event?.Provider]}</Typography>
+      <Typography variant="body1"><b>Tipped:</b> {event.Event.TipValue + event.Event.TipCurrencySymbol}</Typography>
       <Typography variant="body1"><b>Dollar Value:</b> {event.Event.TipValueInDollars}</Typography>
     </Box>}
 

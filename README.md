@@ -4,14 +4,14 @@ It also collects statistics (soon), and offers a websocket connection to let oth
 
 ## Features
 Currently implemented features:
+- Dashboard (customizable widgets, resizable, drag+drop)
 - Event list (latest follows, subs, tips)
+- Chatlog page (combines all chatlogs from all sources)
 - [Websocket](/docs/websocket.md) sending events as they come in
 
 ## Planned Features
 - More Providers (see Supported Platforms below)
 - Infobuttons (on every page, display an Iconbutton at the top right, which expands a menu from the top explaining details of the current page)
-- Chatlog page (combines all chatlogs from all sources)
-- Overview (customizable widgets, resizable, drag+drop - basically components of pages in smaller version)
 - Lovense & PiShock integration (maybe other toys aswell?)
 - Statistics page (gets income by platform/date/day etc)
 - Autoupdate (fynelabs selfupdate lib maybe?)
@@ -19,7 +19,6 @@ Currently implemented features:
 
 ### Technical todo:
 - improve logger:
-    - log to file
     - add toast to frontend, when logger.Toast in golang, display toast in UI
     - add log-page in UI, displaying logger.Info and above
 - Add Websocket settings (port, eventtypes to send)

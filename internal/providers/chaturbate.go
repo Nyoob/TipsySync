@@ -19,9 +19,9 @@ import (
 type Chaturbate struct {
 	config  *config.Provider
 	nextUrl string
-	ctx context.Context
+	ctx     context.Context
 	cancel  context.CancelFunc
-	done chan struct{}
+	done    chan struct{}
 }
 
 func NewChaturbate(cfg *config.Provider) *Chaturbate {
@@ -106,8 +106,10 @@ func (c *Chaturbate) fetch() events.Event {
 
 			return events.TipEvent{
 				Id:                "cb_" + event.Id,
-				User:              c.buildUser(obj.User),
+				User:              c.buildUser(obj.User, obj.Broadcaster),
 				TipValue:          float64(obj.Tip.Tokens),
+				TipCurrency:       "tokens",
+				TipCurrencySymbol: "tks",
 				TipValueInDollars: float64(obj.Tip.Tokens) * 0.05,
 				TipMessage:        obj.Tip.Message,
 				Timestamp:         time.Now(),
@@ -122,7 +124,7 @@ func (c *Chaturbate) fetch() events.Event {
 
 			return events.ChatMessageEvent{
 				Id:          "cb_" + event.Id,
-				User:        c.buildUser(obj.User),
+				User:        c.buildUser(obj.User, obj.Broadcaster),
 				ChatMessage: obj.Message.Message,
 				Timestamp:   time.Now(),
 			}
@@ -134,7 +136,7 @@ func (c *Chaturbate) fetch() events.Event {
 			return nil
 		}
 
-		user := c.buildUser(obj.User)
+		user := c.buildUser(obj.User, obj.Broadcaster)
 
 		switch event.Method {
 		case "fanclubJoin":
@@ -151,7 +153,7 @@ func (c *Chaturbate) fetch() events.Event {
 	return nil
 }
 
-func (c *Chaturbate) buildUser(user cbUser) events.User {
+func (c *Chaturbate) buildUser(user cbUser, broadcaster string) events.User {
 	tierName := ""
 	tierColor := ""
 	if user.InFanclub {
@@ -161,6 +163,7 @@ func (c *Chaturbate) buildUser(user cbUser) events.User {
 	return events.User{
 		Username:            user.Username,
 		Gender:              user.Gender,
+		IsBroadcaster:       broadcaster == user.Username,
 		IsMod:               user.IsMod,
 		HasTks:              user.HasTokens,
 		Subscribed:          user.InFanclub,

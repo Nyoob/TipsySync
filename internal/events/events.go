@@ -60,6 +60,8 @@ type TipEvent struct {
 	Id                string
 	User              User
 	TipValue          float64
+	TipCurrency       string // will be useful for youtube for example
+	TipCurrencySymbol string // eg. 'tk' or '$'
 	TipValueInDollars float64
 	TipMessage        string
 	Timestamp         time.Time
@@ -90,7 +92,7 @@ type SubscribeEvent struct { // eg. cb fanclub or fansly sub
 	Streak     int
 	User       User
 	IsGift     bool // later for twitch
-	GiftAmount int // later for twitch
+	GiftAmount int  // later for twitch
 	Timestamp  time.Time
 }
 
@@ -112,6 +114,7 @@ type User struct {
 	SubscribedTierColor string
 	Gender              string // m(ale), f(emale), t(rans), c(ouple)
 	HasTks              bool
+	IsBroadcaster				bool
 	IsMod               bool
 	StripchatIsKing     bool
 	StripchatIsKnight   bool

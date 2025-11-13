@@ -30,7 +30,7 @@ type Fansly struct {
 	socket *websocket.Conn
 	ctx    context.Context
 	cancel context.CancelFunc
-	done chan struct{}
+	done   chan struct{}
 }
 
 func NewFansly(cfg *config.Provider) *Fansly {
@@ -159,6 +159,12 @@ func (f *Fansly) onMessage(rawMessage []byte) events.Event {
 		if event.ChatRoomMessage.Username != event.ChatRoomMessage.Displayname {
 			username += " (" + event.ChatRoomMessage.Username + ")"
 		}
+		var isBroadcaster bool
+		if val, ok := event.ChatRoomMessage.Metadata["senderIsCreator"]; ok {
+			isBroadcaster = val.(bool)
+		}
+		fmt.Println("metadata", event.ChatRoomMessage.Metadata)
+		fmt.Println("isBroadcaster", isBroadcaster)
 
 		var evtUser = events.User{
 			Username:            username,
@@ -166,7 +172,8 @@ func (f *Fansly) onMessage(rawMessage []byte) events.Event {
 			SubscribedTierName:  subTierName,
 			SubscribedTierColor: "",
 			Gender:              "u",
-			IsMod:               event.ChatRoomMessage.Metadata["senderIsStaff"].(bool),
+			IsBroadcaster:       event.ChatRoomMessage.ChatRoomAccountID == event.ChatRoomMessage.SenderID,
+			IsMod:               event.ChatRoomMessage.AccountFlags == 2,
 			HasTks:              false,
 		}
 
@@ -180,6 +187,8 @@ func (f *Fansly) onMessage(rawMessage []byte) events.Event {
 				Id:                "fansly_" + event.ChatRoomMessage.ID,
 				User:              evtUser,
 				TipValue:          tip / 1000,
+				TipCurrency:       "USD",
+				TipCurrencySymbol: "$",
 				TipValueInDollars: tip / 1000,
 				TipMessage:        event.ChatRoomMessage.Content,
 				Timestamp:         timestamp,
@@ -209,7 +218,6 @@ func (f *Fansly) onMessage(rawMessage []byte) events.Event {
 				Subscribed:          true,
 				SubscribedTierName:  event.SubAlert.SubscriptionTierName,
 				SubscribedTierColor: event.SubAlert.SubscriptionTierColor,
-				IsMod:               false,
 				HasTks:              false,
 				Gender:              "u",
 			},

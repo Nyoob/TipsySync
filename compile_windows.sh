@@ -9,12 +9,12 @@ export GOOS=windows
 export GOARCH=amd64
 
 
-if [ "$1" = "dev" ]; then
-  echo "Compiling dev version"
-  wails build --platform windows/amd64 -debug -windowsconsole
+if [ "$1" = "debug" ]; then
+  echo "Compiling debug version"
+  wails build --platform windows/amd64 -debug -windowsconsole -ldflags "-X 'main.BuildNumber=debug_$(date +%s)'"
 elif [ "$1" = "prod" ]; then
   echo "Compiling prod version"
-  wails build --platform windows/amd64
+  wails build --platform windows/amd64 -ldflags "-X 'main.BuildNumber=$(date +%s)'"
 else
-  echo "Usage: $0 [dev|prod]"
+  echo "Usage: $0 [debug|prod]"
 fi

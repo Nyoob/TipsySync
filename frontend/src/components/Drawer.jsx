@@ -11,10 +11,18 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import ChatIcon from '@mui/icons-material/Chat';
 import SettingsIcon from '@mui/icons-material/Settings';
 
 const drawerWidth = 240;
+const links = [
+  { title: "Dashboard", hashlink: "#", icon: <DashboardIcon /> },
+  { title: "Events", hashlink: "#events", icon: <AttachMoneyIcon /> },
+  { title: "Chat", hashlink: "#chat", icon: <ChatIcon /> },
+  { title: "Settings", hashlink: "#settings", icon: <SettingsIcon /> },
+]
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -110,16 +118,11 @@ export default function TADrawer() {
     setOpen(o => !o)
   }
 
-  const links = [
-    { title: "Events", hashlink: "#events", icon: <AttachMoneyIcon /> },
-    { title: "Settings", hashlink: "#settings", icon: <SettingsIcon /> },
-  ]
-
   return (
     <Drawer variant="permanent" open={open}>
       <DrawerHeader>
         <IconButton onClick={handleDrawerToggle}>
-          {open ? <ChevronLeftIcon fontSize="large"/> : <ChevronRightIcon fontSize="large"/>}
+          {open ? <ChevronLeftIcon fontSize="large" /> : <ChevronRightIcon fontSize="large" />}
         </IconButton>
       </DrawerHeader>
       <Divider />

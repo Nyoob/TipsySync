@@ -8,6 +8,10 @@
   "frontend:dev:serverUrl": "auto",
   "author": {
     "name": "Nyoob",
-    "email": "tipaggregator@nyoob.com"
+    "github": "https://github.com/Nyoob"
+  },
+  "info": {
+    "productVersion": "0.0.2",
+    "github": "https://github.com/Nyoob/TipsySync"
   }
 }

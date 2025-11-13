@@ -12,12 +12,6 @@ export const imageLookup = {
   stripchat,
 }
 
-export const currencyName = {
-  chaturbate: "tks",
-  fansly: "$",
-  stripchat: "tks",
-}
-
 export const genderLookup = {
   "m": "Male",
   "f": "Female",
@@ -49,10 +43,9 @@ export const getSubscriptionName = (tier) => {
 export function getEventItemText(event) {
   switch (event.Type) {
     case "tip":
-      const nativeTip = event.Event.TipValue + currencyName?.[event?.Provider]
       return {
-        shortText: nativeTip,
-        longText: `User ${event.Event.User.Username} has tipped ${nativeTip}`,
+        shortText: event.Event.TipValue + event.Event.TipCurrencySymbol,
+        longText: `User ${event.Event.User.Username} has tipped ${event.Event.TipValue + " " + event.Event.TipCurrency}`,
       }
     case "follow":
       return {

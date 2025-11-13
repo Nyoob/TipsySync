@@ -4,6 +4,8 @@ import {config} from '../models';
 
 export function GetConfig():Promise<config.Config>;
 
+export function GetInfo():Promise<Record<string, any>>;
+
 export function SetProviderSettings(arg1:string,arg2:config.Provider):Promise<void>;
 
 export function SetSettings(arg1:Record<string, any>):Promise<void>;

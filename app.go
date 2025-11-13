@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"log/slog"
+	_ "embed"
+	"encoding/json"
 	"tip-aggregator/internal/config"
 	"tip-aggregator/internal/database"
 	"tip-aggregator/internal/events"
@@ -13,7 +14,12 @@ import (
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
+//go:embed wails.json
+var wailsJSON []byte
+
 type App struct {
+	wailsData map[string]interface{}
+
 	ctx          context.Context
 	db           *database.DB
 	socket       *socket.Socket
@@ -29,6 +35,8 @@ func NewApp() *App {
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
+	_ = json.Unmarshal(wailsJSON, &a.wailsData)
+
 	a.ctx = ctx
 
 	a.db = database.NewDatabase()
@@ -72,19 +80,4 @@ func (a *App) startHandling() {
 	for _, provider := range a.providers {
 		go provider.Start(a.eventHandler)
 	}
-}
-
-// Public Methods (frontend)
-func (a *App) GetConfig() config.Config {
-	return *a.config
-}
-
-func (a *App) SetSettings(settings map[string]any) {
-	for key, value := range settings {
-		logger.Debug(context.Background(), "APP", "Setting a setting", slog.String("Key", key), slog.Any("Value", value))
-		a.config.SetSetting(key, value)
-	}
-}
-func (a *App) SetProviderSettings(provider string, config config.Provider) {
-	a.config.SetProviderSettings(provider, &config)
 }

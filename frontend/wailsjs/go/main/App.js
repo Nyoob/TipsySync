@@ -6,6 +6,10 @@ export function GetConfig() {
   return window['go']['main']['App']['GetConfig']();
 }
 
+export function GetInfo() {
+  return window['go']['main']['App']['GetInfo']();
+}
+
 export function SetProviderSettings(arg1, arg2) {
   return window['go']['main']['App']['SetProviderSettings'](arg1, arg2);
 }
