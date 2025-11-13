@@ -18,12 +18,12 @@ export default function Overview({ }) {
       margin={[32, 32]}
       width="100%">
       <div key="chat" data-grid={{ x: 6, y: 0, w: 6, h: 12, minW: 2 }}>
-        <Card style={styles.card}>
+        <Card style={styles.card} className="scrollable">
           <Chat />
         </Card>
       </div>
       <div key="events" data-grid={{ x: 0, y: 0, w: 6, h: 12, minW: 2 }}>
-        <Card style={styles.card}>
+        <Card style={styles.card} className="scrollable">
           <Events />
         </Card>
       </div>
@@ -35,6 +35,5 @@ const styles = {
   card: {
     padding: "20px",
     height: "calc(100% - 40px)",
-    overflow: "scroll",
   }
 }

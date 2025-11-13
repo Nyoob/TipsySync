@@ -15,6 +15,16 @@
     background-origin: content-box;
 }
 
+.scrollable {
+    overflow-y: "scroll";
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollable::-webkit-scrollbar {
+    display: none;
+}
+
 .result {
     height: 20px;
     line-height: 20px;

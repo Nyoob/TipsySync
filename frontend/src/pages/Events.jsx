@@ -38,7 +38,10 @@ function Events({ isWidget }) {
 function EventDetails({ event, closeDetails }) {
   const texts = getEventItemText(event);
   const subNames = getSubscriptionName(event.Provider);
-  return <Paper elevation={2} sx={{ padding: 4, flexBasis: 100, minWidth: 300, position: 'relative' }}>
+  return <Paper elevation={2} sx={{
+    padding: 4, flexBasis: 100, minWidth: 300,
+    position: 'relative'
+  }}>
     <IconButton
       size="large"
       color="inherit"
@@ -104,8 +107,8 @@ function EventItem({ event, setSelectedEvent, isHighlighted }) {
     }
     : {};
 
-  return <Paper elevation={2}
-    sx={{ display: 'flex', padding: 2, alignItems: "center", transition: "background 1.5s, box-shadow 1.4s, border 1.3s", ...highlightStyle }}
+  return <Paper elevation={0}
+    sx={{ display: 'flex', padding: 2, alignItems: "center", bgcolor: "background.paper", transition: "background 1.5s, box-shadow 1.4s, border 1.3s", ...highlightStyle }}
     onClick={() => setSelectedEvent(event)}>
     <Box
       component="img"

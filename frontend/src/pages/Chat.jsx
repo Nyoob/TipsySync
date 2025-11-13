@@ -40,7 +40,7 @@ function ChatMessage({ chatMsg }) {
         gap: 2,
         padding: 1,
         borderRadius: 1,
-        backgroundColor: "background.paper",
+        bgcolor: "background.paper",
       }}
     >
       <Box
